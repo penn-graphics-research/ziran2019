@@ -1,0 +1,277 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4a3004b..f70b7b1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -35,7 +35,7 @@
+ 
+ PROJECT(Alembic)
+ 
+-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
++CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+ 
+ MESSAGE(STATUS "CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
+ 
+@@ -69,7 +69,7 @@ OPTION(USE_PRMAN "Include PRMan stuff" OFF)
+ OPTION(USE_PYALEMBIC "Include PyAlembic stuff" OFF)
+ OPTION(USE_STATIC_BOOST "Build with static Boost libs" OFF)
+ OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
+-OPTION(USE_TESTS "Include Alembic tests" ON)
++OPTION(USE_TESTS "Include Alembic tests" OFF)
+ OPTION(ALEMBIC_ILMBASE_LINK_STATIC "IlmBase is a static library" OFF)
+ OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
+ OPTION(ALEMBIC_LIB_USES_BOOST
+@@ -110,17 +110,7 @@ IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+     SET(LINUX TRUE)
+ ENDIF()
+ 
+-IF (NOT ${ALEMBIC_LIB_USES_TR1} AND NOT ${ALEMBIC_LIB_USES_BOOST})
+-    # TODO figure out how to do this for Windows
+-    INCLUDE(CheckCXXCompilerFlag)
+-    CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+-    CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+-    IF (COMPILER_SUPPORTS_CXX1X)
+-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+-    ELSEIF (COMPILER_SUPPORTS_CXX0X)
+-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+-    ENDIF()
+-ENDIF()
++set(CMAKE_CXX_STANDARD 11)
+ 
+ # Set visibility for GNU compilers
+ IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+@@ -250,7 +240,7 @@ ENDIF()
+ 
+ # Alembic
+ ADD_SUBDIRECTORY(lib)
+-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib" "${PROJECT_BINARY_DIR}/lib")
++INCLUDE_DIRECTORIES("${Alembic_SOURCE_DIR}/lib" "${PROJECT_BINARY_DIR}/lib")
+ 
+ # PyAlembic
+ IF (USE_PYALEMBIC)
+diff --git a/bin/AbcLs/AbcLs.cpp b/bin/AbcLs/AbcLs.cpp
+index e1162ff..f627bee 100644
+--- a/bin/AbcLs/AbcLs.cpp
++++ b/bin/AbcLs/AbcLs.cpp
+@@ -799,7 +799,7 @@ int main( int argc, char *argv[] )
+ 
+         // walk property hierarchy for most recent object
+         Abc::ICompoundProperty props = iObj.getProperties();
+-        const Abc::PropertyHeader* header;
++        const Abc::PropertyHeader* header = nullptr;
+         bool found = false;
+         bool shouldPrintValue = false;
+         for ( std::size_t i = 0; i < seglist.size(); ++i ) {
+diff --git a/cmake/AlembicPython.cmake b/cmake/AlembicPython.cmake
+index e2b395d..0a6493e 100644
+--- a/cmake/AlembicPython.cmake
++++ b/cmake/AlembicPython.cmake
+@@ -40,7 +40,7 @@ IF(PYTHONLIBS_FOUND)
+     SET(ALEMBIC_PYTHON_LIBRARY ${PYTHON_LIBRARIES})
+ ENDIF()
+ 
+-SET( CopyScriptFile ${CMAKE_SOURCE_DIR}/cmake/CopyScriptFile.py )
++SET( CopyScriptFile ${Alembic_SOURCE_DIR}/cmake/CopyScriptFile.py )
+ 
+ #-******************************************************************************
+ # A Python Script just needs to be copied to the same directory in the
+@@ -104,7 +104,7 @@ MACRO(ADD_PYTHON_MODULE ModuleFile ParentModuleName )
+                       DEPENDS ${ModuleFileFullPath} )
+ 
+   # Get the RunPythonTest script
+-  SET( RunPythonTest ${CMAKE_SOURCE_DIR}/cmake/RunPythonTest )
++  SET( RunPythonTest ${Alembic_SOURCE_DIR}/cmake/RunPythonTest )
+ 
+   # Create a test name.
+   SET( TestName ${ParentModuleName}/${ModuleFileNoDirectory}_TEST )
+@@ -142,7 +142,7 @@ MACRO(ADD_PYTHON_EXIT0_SCRIPT_TEST PythonScript)
+   GET_FILENAME_COMPONENT( PythonScriptFullPath ${PythonScript} ABSOLUTE )
+ 
+   # Get the RunPythonTest script
+-  SET( RunPythonTest ${CMAKE_SOURCE_DIR}/cmake/RunPythonTest )
++  SET( RunPythonTest ${Alembic_SOURCE_DIR}/cmake/RunPythonTest )
+ 
+   # Fiddle with the Test Name. We expect exit0 scripts to end with
+   STRING( REGEX MATCH "_Test$" RegexOutput ${PythonScriptNoDirectory} )
+diff --git a/examples/AbcClients/CMakeLists.txt b/examples/AbcClients/CMakeLists.txt
+index 30e8686..d355789 100644
+--- a/examples/AbcClients/CMakeLists.txt
++++ b/examples/AbcClients/CMakeLists.txt
+@@ -34,6 +34,6 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/examples")
++INCLUDE_DIRECTORIES("${Alembic_SOURCE_DIR}/examples")
+ 
+ ADD_SUBDIRECTORY(WFObjConvert)
+diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
+index 51ac45d..44d216f 100644
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -34,7 +34,7 @@
+ ##-*****************************************************************************
+ 
+ # Recurse into libs
+-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/lib")
++INCLUDE_DIRECTORIES("${Alembic_SOURCE_DIR}/lib")
+ 
+ # No boost dependency was needed so dont include AbcClients
+ IF (ALEMBIC_LIB_USES_BOOST OR USE_PYALEMBIC)
+diff --git a/lib/Alembic/Abc/Tests/CMakeLists.txt b/lib/Alembic/Abc/Tests/CMakeLists.txt
+index 399242b..dfe34d1 100644
+--- a/lib/Alembic/Abc/Tests/CMakeLists.txt
++++ b/lib/Alembic/Abc/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(Abc_Test1 test1.cpp)
+ TARGET_LINK_LIBRARIES(Abc_Test1 ${CORE_LIBS})
+diff --git a/lib/Alembic/AbcCollection/Tests/CMakeLists.txt b/lib/Alembic/AbcCollection/Tests/CMakeLists.txt
+index c41e1f0..0e82ee4 100644
+--- a/lib/Alembic/AbcCollection/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcCollection/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AbcCollection_CollectionTest
+                CollectionTest.cpp
+diff --git a/lib/Alembic/AbcCoreAbstract/Tests/CMakeLists.txt b/lib/Alembic/AbcCoreAbstract/Tests/CMakeLists.txt
+index f386f67..ccbd3ad 100644
+--- a/lib/Alembic/AbcCoreAbstract/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcCoreAbstract/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AbcCoreAbstractTimeSamplingTest TestTimeSampling.cpp)
+ TARGET_LINK_LIBRARIES(AbcCoreAbstractTimeSamplingTest ${CORE_LIBS})
+diff --git a/lib/Alembic/AbcCoreHDF5/Tests/CMakeLists.txt b/lib/Alembic/AbcCoreHDF5/Tests/CMakeLists.txt
+index fc14f17..3da378a 100644
+--- a/lib/Alembic/AbcCoreHDF5/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcCoreHDF5/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ SET(CXX_FILES
+     ArchiveTests.cpp
+diff --git a/lib/Alembic/AbcCoreOgawa/Tests/CMakeLists.txt b/lib/Alembic/AbcCoreOgawa/Tests/CMakeLists.txt
+index 5992910..f82d88b 100644
+--- a/lib/Alembic/AbcCoreOgawa/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcCoreOgawa/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ SET(CXX_FILES
+     ArchiveTests.cpp
+diff --git a/lib/Alembic/AbcGeom/Tests/CMakeLists.txt b/lib/Alembic/AbcGeom/Tests/CMakeLists.txt
+index 778d374..91cb3a2 100644
+--- a/lib/Alembic/AbcGeom/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcGeom/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AbcGeom_PolyMeshTest
+                MeshData.h
+diff --git a/lib/Alembic/AbcMaterial/Tests/CMakeLists.txt b/lib/Alembic/AbcMaterial/Tests/CMakeLists.txt
+index b7bd3ab..543b3ac 100644
+--- a/lib/Alembic/AbcMaterial/Tests/CMakeLists.txt
++++ b/lib/Alembic/AbcMaterial/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AbcMaterial_WriteMaterialTest
+                WriteMaterial.cpp
+diff --git a/lib/Alembic/CMakeLists.txt b/lib/Alembic/CMakeLists.txt
+index e0a5004..105df06 100644
+--- a/lib/Alembic/CMakeLists.txt
++++ b/lib/Alembic/CMakeLists.txt
+@@ -51,7 +51,7 @@ ADD_LIBRARY(Alembic ${LIB_TYPE} ${CXX_FILES})
+ 
+ TARGET_INCLUDE_DIRECTORIES(Alembic
+     PUBLIC
+-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib>
++    $<BUILD_INTERFACE:${Alembic_SOURCE_DIR}/lib>
+     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/lib>
+     ${ALEMBIC_ILMBASE_INCLUDE_DIRECTORY}
+     ${Boost_INCLUDE_DIRS}
+diff --git a/lib/Alembic/Ogawa/Tests/CMakeLists.txt b/lib/Alembic/Ogawa/Tests/CMakeLists.txt
+index eacd164..f6cd6ae 100644
+--- a/lib/Alembic/Ogawa/Tests/CMakeLists.txt
++++ b/lib/Alembic/Ogawa/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AlembicOgawaArchive_Test ArchiveTest.cpp)
+ TARGET_LINK_LIBRARIES(AlembicOgawaArchive_Test Alembic ${CORE_LIBS})
+diff --git a/lib/Alembic/Util/Tests/CMakeLists.txt b/lib/Alembic/Util/Tests/CMakeLists.txt
+index dee3412..0d7c62d 100644
+--- a/lib/Alembic/Util/Tests/CMakeLists.txt
++++ b/lib/Alembic/Util/Tests/CMakeLists.txt
+@@ -33,7 +33,7 @@
+ ##
+ ##-*****************************************************************************
+ 
+-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
++INCLUDE_DIRECTORIES(${Alembic_SOURCE_DIR}/lib ${PROJECT_BINARY_DIR}/lib)
+ 
+ ADD_EXECUTABLE(AlembicUtilOperatorBool_Test OperatorBoolTest.cpp)
+ TARGET_LINK_LIBRARIES(AlembicUtilOperatorBool_Test ${CORE_LIBS})
+diff --git a/python/PyAlembic/CMakeLists.txt b/python/PyAlembic/CMakeLists.txt
+index 1425174..ec47c76 100644
+--- a/python/PyAlembic/CMakeLists.txt
++++ b/python/PyAlembic/CMakeLists.txt
+@@ -112,8 +112,8 @@ IF (Boost_PYTHON_LIBRARY AND ALEMBIC_PYTHON_LIBRARY)
+                    ${ALEMBIC_PYILMBASE_PYIMATH_LIB}
+     )
+ 
+-    INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_DIR}" "${CMAKE_SOURCE_DIR}/lib"
+-          "${CMAKE_SOURCE_DIR}/python/PyAlembic")
++    INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_DIR}" "${Alembic_SOURCE_DIR}/lib"
++          "${Alembic_SOURCE_DIR}/python/PyAlembic")
+ 
+     ADD_LIBRARY(alembicmodule SHARED ${CPP_FILES})
+ 
+diff --git a/python/PyAlembic/Tests/CMakeLists.txt b/python/PyAlembic/Tests/CMakeLists.txt
+index 7cfbdae..4067956 100644
+--- a/python/PyAlembic/Tests/CMakeLists.txt
++++ b/python/PyAlembic/Tests/CMakeLists.txt
+@@ -44,7 +44,7 @@ SET(TEST_LIBS
+     ${EXTERNAL_MATH_LIBS}
+ )
+ 
+-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/python/PyAlembic/Tests")
++INCLUDE_DIRECTORIES("${Alembic_SOURCE_DIR}/python/PyAlembic/Tests")
+ 
+ ADD_EXECUTABLE(PyAlembic_Test
+                testAlembicImport.cpp
