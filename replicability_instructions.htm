@@ -1,0 +1,17 @@
+<html><head><meta charset="utf-8"></head><body><h2>This code was evaluated for replicability by an independent team of experts (see <a href="https://replicability.graphics/">https://replicability.graphics/</a> ).<br>The remainder of this file contains the evaluation report, along with suggestions to successfully compile and run the code.<br></h2><hr><div id="review-1"><h2>Information</h2><ul><li><span class="family">Paper topic</span>: Animation and Simulation</li>
+<li><span class="family">Software type</span>: Code</li>
+<li><span class="family">Able to run a replicability test</span>: True</li>
+<li><span class="family">Replicability score</span>: 5</li>
+<li><span class="family">Software language</span>: C++</li>
+<li><span class="family">License</span>: </li>
+<li><span class="family">Build mechanism</span>: CMake/Make</li>
+<li><span class="family">Dependencies</span>: eigen3, gfortran, libmetis, libopenvdb, libboost, libilmbase, libtbb2, libz, clang-format</li>
+<li><span class="family">Documentation score</span> {0,1,2}: 0</li>
+<li><span class="family">Reviewer</span>: Julie Digne &lt;julie.digne@liris.cnrs.fr&gt; </li>
+<li><span class="family">Time spent for the test (build->first run, timeout at 100min)</span>: 30min</li>
+</ul><h2>Source code information</h2>
+<ul><li><span class="family">Code URL</span>:  <a href="https://github.com/penn-graphics-research/ziran2019">https://github.com/penn-graphics-research/ziran2019</a></li>
+<li><span class="family">Git commit hash</span>: 8d3d27cd17bbceab18c317820dbe595178f6312a</li>
+<li><span class="family">Software Heritage link</span>: <a href="https://archive.softwareheritage.org/swh:1:dir:0bca7744a7dff8d83093fa013e99d7086cfdf8f3;origin=https://github.com/penn-graphics-research/ziran2019;visit=swh:1:snp:60d230fd23a15f9241785ee90478bf9722d99dac;anchor=swh:1:rev:8d3d27cd17bbceab18c317820dbe595178f6312a;path=//"><img src="https://archive.softwareheritage.org/badge/swh:1:dir:0bca7744a7dff8d83093fa013e99d7086cfdf8f3;origin=https://github.com/penn-graphics-research/ziran2019;visit=swh:1:snp:60d230fd23a15f9241785ee90478bf9722d99dac;anchor=swh:1:rev:8d3d27cd17bbceab18c317820dbe595178f6312a;path=//"></a></li>
+</ul><h2>Comments</h2><pre>To make it compile, I removed the -Werror=all . In Lib/MPM/MpmSimulationBase.cpp, I replaced all lines "if constexpr (!USE_APIC_BLEND_RPIC)" with "if (!USE_APIC_BLEND_RPIC)"; "if constexpr (USE_APIC_BLEND_RPIC)" with "if (USE_APIC_BLEND_RPIC)"; "if constexpr (!USE_MPM_DEGREE_ONE)" with "if (!USE_MPM_DEGREE_ONE)".</pre><h2>Misc. comments</h2>
+<pre>The code corresponds to two siggraph 2019 papers. It is not explicit which code corresponds to which paper, I assumed "fracture" corresponds to this paper.  I could reproduce the dino and bread experiments. I visualized the bgeo files with the partview tool available here: "https://github.com/wdas/partio", it can also be done using Houdini. To know which test number corresponds to which experiment, refer to the FractureInit3D.h file.</pre></div></body></html>
